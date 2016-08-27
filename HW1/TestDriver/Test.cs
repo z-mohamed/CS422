@@ -10,7 +10,7 @@ namespace TestDriver
 		[Test ()]
 		public void TestCase ()
 		{
-			System.IO.TextWriter x = System.IO.File.CreateText ("/home/zak/Repos/CS422/HW1/testfile.txt");
+			System.IO.TextWriter x = System.IO.File.CreateText("Enter File Location Here");
 
 			CS422.NumberedTextWriter test = new NumberedTextWriter (x,71);
 
@@ -29,4 +29,3 @@ namespace TestDriver
 		}
 	}
 }
-
