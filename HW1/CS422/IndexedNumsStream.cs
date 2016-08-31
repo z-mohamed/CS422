@@ -95,7 +95,21 @@ namespace CS422
 
 		public override long Seek (long offset, System.IO.SeekOrigin origin)
 		{
-			throw new NotImplementedException ();
+			long new_position = position + offset;
+
+			if (new_position > length) 
+			{
+				position = length;
+			} else if (new_position < 0) 
+			{
+				position = 0;
+			} else 
+			{
+				position = new_position;
+
+			}
+
+			return position;
 		}
 
 
