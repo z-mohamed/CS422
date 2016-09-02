@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.IO;
 namespace CS422
 {
 	public class IndexedNumsStream : System.IO.Stream
@@ -12,15 +12,17 @@ namespace CS422
 
 		public IndexedNumsStream (long lengthIn)
 		{
+			//check for negative length, if so clamp to zero
 			if (lengthIn < 0) 
 			{
 				lengthIn = 0;
 			}
 
+			//set length
 			length = (byte)lengthIn;
 
-			//Why is the setting the position not necessary
-			position = (long)0;
+			//set position
+			position = 0;
 			
 		}
 
@@ -29,20 +31,21 @@ namespace CS422
 		{
 			get 
 			{
-				return length;
-				
+				return (long)length;	
 			}
 		}
 
 
 		public override void SetLength (long value)
 		{
+			//check if value is negative, if so clamp to zero
 			if (value < 0) 
 			{
 				value = 0;
 			}
 
-			length = (byte)value;
+			//set length
+			length = (byte) value;
 		}	
 
 
@@ -55,16 +58,19 @@ namespace CS422
 
 			set 
 			{
+				//check if value is negative, if so clamp to zero
 				if (value < 0) 
 				{
 					value = 0;
 				} 
-				else if (value > length) 
+				//check if value is greater than length, if so clamp it to length
+				else if (value > (long)length) 
 				{
-					value = length;
+					value = (long)length;
 
 				}
 
+				//set position
 				position = value;
 			}
 		}
@@ -72,18 +78,23 @@ namespace CS422
 
 		public override int Read (byte[] buffer, int offset, int count)
 		{
-			
-			for (long i = offset; i < count && (byte)position < length; i++)
+			long value;
+			int i;
+
+			//Keeep reading while count req. hasn't been meet
+			for (i = 0; i < count; i++)
 			{
 				
-				long value = position % (long)256;
+				value = position % (long)256;
 
-				buffer [i] = (byte) value;
+				buffer[offset+i] = (byte)value;
 
 				position++;
 			}
-
-			return count;
+			//increment i so number of bytes read is not zero-based
+			i++;
+			
+			return i;
 		}
 
 
@@ -93,23 +104,30 @@ namespace CS422
 		}
 
 
-		public override long Seek (long offset, System.IO.SeekOrigin origin)
+		public override long Seek (long offset, SeekOrigin origin)
 		{
-			long new_position = position + offset;
-
-			if (new_position > length) 
+			switch (origin) 
 			{
-				position = length;
-			} else if (new_position < 0) 
-			{
+			//set position to beginning
+			case SeekOrigin.Begin:
 				position = 0;
-			} else 
-			{
-				position = new_position;
-
+				break;
+			
+			//do nothing position is already current
+			case SeekOrigin.Current:
+				break;
+			
+			//set position to end of stream
+			case SeekOrigin.End:
+				position = length;
+				break;
 			}
 
+			//seek to offset from position
+			position += offset;
+
 			return position;
+
 		}
 
 
@@ -124,7 +142,7 @@ namespace CS422
 		{
 			get 
 			{
-				throw new NotImplementedException ();
+				return true;
 			}
 		}
 
@@ -133,7 +151,7 @@ namespace CS422
 		{
 			get 
 			{
-				throw new NotImplementedException ();
+				return true;
 			}
 		}
 
@@ -142,7 +160,7 @@ namespace CS422
 		{
 			get 
 			{
-				throw new NotImplementedException ();
+				return false;
 			}
 		}
 	}
