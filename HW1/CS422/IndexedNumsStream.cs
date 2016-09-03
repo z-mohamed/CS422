@@ -5,7 +5,7 @@ namespace CS422
 	public class IndexedNumsStream : System.IO.Stream
 	{
 		
-		byte length;
+		long length;
 
 		long position;
 
@@ -19,7 +19,7 @@ namespace CS422
 			}
 
 			//set length
-			length = (byte)lengthIn;
+			length = lengthIn;
 
 			//set position
 			position = 0;
@@ -31,7 +31,7 @@ namespace CS422
 		{
 			get 
 			{
-				return (long)length;	
+				return length;	
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace CS422
 			}
 
 			//set length
-			length = (byte) value;
+			length =  value;
 		}	
 
 
@@ -64,9 +64,9 @@ namespace CS422
 					value = 0;
 				} 
 				//check if value is greater than length, if so clamp it to length
-				else if (value > (long)length) 
+				else if (value > length) 
 				{
-					value = (long)length;
+					value = length;
 
 				}
 
@@ -78,23 +78,26 @@ namespace CS422
 
 		public override int Read (byte[] buffer, int offset, int count)
 		{
-			long value;
-			int i;
+			int read = 0;
 
 			//Keeep reading while count req. hasn't been meet
-			for (i = 0; i < count; i++)
+			for (int i = 0; i < count ; i++)
 			{
-				
-				value = position % (long)256;
+				var value = (byte) (position % 256);
 
-				buffer[offset+i] = (byte)value;
 
+				buffer[offset + i] = value;
+				read++;
 				position++;
+
+				//if position moves past length of stream stop reading
+				if (position >= length) 
+				{
+					break;
+				}
 			}
-			//increment i so number of bytes read is not zero-based
-			i++;
-			
-			return i;
+
+			return read;
 		}
 
 
@@ -120,6 +123,9 @@ namespace CS422
 			//set position to end of stream
 			case SeekOrigin.End:
 				position = length;
+				break;
+
+			default:
 				break;
 			}
 
