@@ -11,10 +11,6 @@ namespace CS422
 		TextWriter writer;
 		Thread t;
 
-		//why??
-		bool isDisposed = false;
-		
-		
 		public ThreadPoolSleepSorter (TextWriter output, ushort threadCount)
 		{
 			//set textwriter
@@ -46,16 +42,7 @@ namespace CS422
 					_blocking_coll.Take().RunTask(writer);
 
 				}
-				catch (Exception ex)
-				{
-					
-
-
-
-
-
-				}
-
+				catch (Exception ex){}
 			}
 
 		}

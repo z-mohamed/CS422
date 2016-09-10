@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.IO;
 namespace CS422
 {
 	public class PCQueue
@@ -28,64 +28,53 @@ namespace CS422
 
 		public void Enqueue(int dataValue)
 		{
-			
+			bool _try_enqueue = true;
+
 			// empty list
 			if (_front == null) 
 			{
 				_back = new Node (dataValue);
-
+				Console.WriteLine ("First");
 				_front = _back;
+				Console.WriteLine ("2nd");
+			}
+			else
+			{
+				while(_try_enqueue)
+				{
+					if (_dummy == _front)
+					{
+						//do nothing, dequeue in progress
+					}
+					else
+					{
+						_temp = _back;
+						_back = new Node (dataValue);
+						_temp.next = _back;
+						_try_enqueue = false;
+					}
+				}
 
 			}
-
-			// 1 item in list
-			else if (_front == _back && _front.next == null) 
-			{
-				_back = new Node (dataValue);
-				
-				_front.next = _back;
-			} 
-
-			//>1 item
-			else 
-			{
-				_temp = _back;
-
-				_back = new Node (dataValue);
-
-				_temp.next = _back;
-
-			}
-
-
-		}
-
-
+	 	}
 
 		public bool Dequeue(ref int out_value)
 		{
 
 			//if list is empty, return false
-			if (_front == null && _dummy == null )
+			if (_front == null) {
+				Console.WriteLine ("Third");
 				return false;
+			}
 
-			//mark node in front
+			//mark node in front for deletion
 			_dummy = _front;
 
-			//if node after front dosen't exist, 1 item in list
-			if (_dummy == null) 
-			{
-				out_value = _front.data;
-				//_front = _;
-
-			} 
-			//multiple item in list delete one in front
-			else 
-			{
-				out_value = _front.data;
-				_front = _dummy;
-				
-			}
+			//save data before deletetin 
+			out_value = _front.data;
+		
+			//delete
+			_front = _front.next;
 
 			return true;
 		}
