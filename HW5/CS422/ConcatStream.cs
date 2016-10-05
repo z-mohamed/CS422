@@ -56,21 +56,17 @@ namespace CS422
 
 		public override long Length 
 		{
-			
-			get 
-			{
-				if (ctor == 3) 
-				{
+			get {
+				if (ctor == 3) {
 					if (verifyStreamLengthProp (scnd))
 						return frst.Length + scnd.Length;
 					else
 						return length;
-				} 
-				else 
-				{
+				} else {
 					if (verifyStreamLengthProp (scnd))
 						return frst.Length + scnd.Length;
-
+					else
+						throw new NotSupportedException ("Length Property is not Suppoerted");
 				}
 			}
 
@@ -108,47 +104,7 @@ namespace CS422
 			// only bother with a read call if both stream support reading
 			if (frst.CanRead && scnd.CanRead) 
 			{
-				//if second stream supports Length we can determine End Of Stream
-				if (verifyStreamLengthProp (scnd)) 
-				{
-					EOS = true;
-				}
-
-				for(read = 0; read < count; read++) 
-				{
-					//if position in ConcatStream is within the Length of the first stream
-					if (positionCS < frst.Length - 1) 
-					{
-						// read from first stream
-						buffer[offset+read] = readByte(frst);
-
-						//increase position in ConcatStream
-						positionCS++;
-
-					}
-					else 
-					{
-						//if end of stream is calculatable 
-						if (EOS) 
-						{
-							// calculate end of stream
-							long end = frst.Length + scnd.Length - 2;
-							//check if we have reached end of stream
-							//if so break out of loop
-							if (positionCS >= end) 
-							{
-								break;
-
-							}
-
-						}
-						// read from second stream
-						buffer[offset+read] = readByte(scnd);
-
-						//increase position in ConcatStream
-						positionCS++;
-					}
-				}
+				read = readWriteHandler (buffer, offset, count, "read");
 				// return number of bytes read
 				return read;
 			} 
@@ -171,7 +127,7 @@ namespace CS422
 				
 				// Implement Write Here
 
-				long dummy = readOrWrite (buffer, offset, count, "write");
+				int dummy = readWriteHandler (buffer, offset, count, "write");
 
 			} 
 
@@ -343,6 +299,7 @@ namespace CS422
 		private void setStreamPosition (Stream givenStream1, Stream givenStream2, long positionCS)
 		{
 			long streamSplit = givenStream1.Length - 1;
+
 			if (positionCS <= streamSplit) 
 			{
 				givenStream1.Position = positionCS;
@@ -351,18 +308,66 @@ namespace CS422
 			else 
 			{
 				givenStream1.Position = streamSplit;
+
 				givenStream2.Position = positionCS;
 			}
 		}
 
 
-		//read and write logic
-		private long readOrWrite(byte[] buffer, int offset, int count, string command)
+		//checks if a write call can be completed
+		bool canWrite()
 		{
+			long streamSplit = frst.Length - 1;
+			bool result;
+			//if we're dealing with the second stream
+			if (positionCS > streamSplit) 
+			{
+				//if second stream can seek
+				if (scnd.CanSeek) 
+				{	
+					//seek to position that is relative to the current ConcatStream position
+					scnd.Seek (positionCS - frst.Length, SeekOrigin.Begin);
+				
+					result = true;
+					 
+				} 
+				//if position is on the nose (already at the correct position
+				else if (scnd.Position == positionCS - frst.Length) 
+				{
+					result = true;
+				}
+				//cant write. FAIL!
+				else 
+				{
+					result = false;
+				}
+			}
+			else
+			{
+				//if the postion is off 
+				if(frst.Position != positionCS)
+				{
+					//correct it
+					frst.Seek (positionCS, SeekOrigin.Begin);
+				}
+
+				result = true;
+			}
+
+
+			return result;
+		}
+
+
+		//read and write handler
+		private int readWriteHandler(byte[] buffer, int offset, int count, string command)
+		{
+			//assume End of Stream cannot be calculated
 			bool EOS = false;
+
 			int i;
 
-			//if second stream supports Length we can determine End Of Stream
+			//if second stream supports Length we can determine End Of Stream so set flag to indicate this
 			if (verifyStreamLengthProp (scnd)) 
 			{
 				EOS = true;
@@ -371,7 +376,7 @@ namespace CS422
 			for(i = 0; i < count; i++) 
 			{
 				//if position in ConcatStream is within the Length of the first stream
-				if (positionCS < frst.Length - 1) 
+				if (positionCS <= frst.Length - 1) 
 				{
 					if (command == "read") 
 					{	
@@ -381,9 +386,17 @@ namespace CS422
 
 					else if (command =="write") 
 					{
-						int bufP = offset + i;
-						//write byte to first stream
-						writeByte(frst,buffer,bufP);
+
+						if(canWrite())
+						{
+							int bufP = offset + i;
+							//write byte to first stream
+							writeByte(frst,buffer,bufP);
+						}
+						else
+						{
+							throw new Exception ("Error Cannot Write. Position Properties out of Sort");
+						}
 
 					}
 					//increase position in ConcatStream
@@ -396,10 +409,10 @@ namespace CS422
 					if (EOS) 
 					{
 						// calculate end of stream
-						long end = frst.Length + scnd.Length - 2;
+						long end = frst.Length + scnd.Length - 1;
 						//check if we have reached end of stream
 						//if so break out of loop
-						if (positionCS >= end) 
+						if (positionCS > end) 
 						{
 							break;
 
@@ -410,15 +423,23 @@ namespace CS422
 					if (command == "read") 
 					{	
 						// read from first stream
-						buffer [offset + i] = readByte (frst);
+						buffer [offset + i] = readByte (scnd);
 					} 
 
 					else if (command =="write") 
-					{		
-						//get position of byte to be written
-						int bufP = offset + i;
-						//write byte to second stream
-						writeByte(scnd,buffer,bufP);
+					{	
+						if(canWrite())
+						{	
+							//get position of byte to be written
+							int bufP = offset + i;
+							//write byte to second stream
+							writeByte(scnd,buffer,bufP);
+						}
+
+						else
+						{
+							throw new Exception ("Error Cannot Write. Position Properties out of Sort");
+						}
 
 
 					}
