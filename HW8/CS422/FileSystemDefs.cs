@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CS422
 {
-	// Represents a directory in the filesystem
+	// Directory abstraction.
 	public abstract class Dir422
 	{
 		public abstract string Name { get; }
@@ -31,7 +31,7 @@ namespace CS422
 		public abstract Dir422 CreateDir(string dirName);
 	}
 		
-	// Represents a file in the filesystem
+	// File abstraction
 	public abstract class File422
 	{
 		public abstract string Name { get; }
@@ -41,21 +41,19 @@ namespace CS422
 		public abstract Stream OpenReadOnly();
 
 		public abstract Stream OpenReadWrite();
-
 	}
 		
-	// Represents the file systeem.
+	// File System abstraction
 	public abstract class FileSys422
 	{
 		public abstract Dir422 GetRoot();
-
 
 		public virtual bool Contains(File422 file)
 		{
 			return Contains(file.Parent);
 
 		}
-			
+
 		public virtual bool Contains ( Dir422 dir)
 		{
 			// Get to the root directory
@@ -132,19 +130,56 @@ namespace CS422
 			}		 
 		}
 
-		
+		// Check if specified file is within this directory.
+		// Allows recursive checks.
 		public override bool ContainsFile(string fileName, bool recursive)
 		{
-			throw new NotImplementedException();
+			File422 file = GetFile (fileName);
+
+			if (file != null)
+				return true;
+
+			if (!recursive)
+				return false;
+
+			IList<Dir422> directories = GetDirs ();
+
+			for(int i =0; i<directories.Count();i++)
+			{
+				Dir422 dir = directories [i];
+
+				if (dir.ContainsFile (fileName, true))
+					return true;
+			}
+
+			return false;
 		}
 
-
+		// Check if specified directory is a sub-directory of this directory.
+		// Allows recursive checks.
 		public override bool ContainsDir(string dirName, bool recursive)
 		{
-			throw new NotImplementedException();
+			Dir422 directory = GetDir (dirName);
+
+			if (directory != null)
+				return true;
+
+			if (!recursive)
+				return false;
+
+			IList<Dir422> directories = GetDirs ();
+
+			for(int i =0; i<directories.Count();i++)
+			{
+				Dir422 dir = directories [i];
+
+				if (dir.ContainsDir(dirName, true))
+					return true;
+			}
+
+			return false; 
 		}
 			
-
 		// Get specified directory in this directory.
 		public override Dir422 GetDir(string dirName)
 		{
@@ -228,21 +263,27 @@ namespace CS422
 
 		public override string Name { get; }
 
-		// NOT IMPLEMENTED!!
-		public override Dir422 Parent {
-			get;
+		public override Dir422 Parent 
+		{
+			get
+			{
+				string path = m_path.Substring (0, m_path.Count() - Name.Count ()-1);
+
+				return new StdFSDir (path);
+			}
 		}
 
-
+		// Not Tested
 		public override Stream OpenReadOnly()
 		{
+			
 			return new FileStream(m_path, FileMode.Open, FileAccess.Read);
 		}
 
-
+		// Not Tested
 		public override Stream OpenReadWrite()
 		{
-			throw new NotImplementedException();
+			return new FileStream (m_path, FileMode.Open, FileAccess.ReadWrite); 
 		}
 	}
 
@@ -276,6 +317,164 @@ namespace CS422
 			}
 
 			return new StandardFileSystem (rootDir);
+		}
+	}
+
+
+
+	//Implementation of StdFSDir
+	public class MemFSDir : Dir422
+	{
+		//public MemFSDir Parent;
+		public Dictionary<String,MemFSDir> directories{ get; }
+		public Dictionary<String, MemFSFile> files { get; } 
+
+		// Root Ctor
+		public MemFSDir()
+		{
+			Name = "rootDir";
+			Parent = null;
+
+			directories = new Dictionary<String,MemFSDir> ();
+			files = new Dictionary<String,MemFSFile> ();
+
+		}
+
+		// Regular ctor
+		private MemFSDir(string name, MemFSDir _parent)
+		{
+			Name = name;
+			Parent = _parent;
+
+			directories = new Dictionary<String,MemFSDir> ();
+			files = new Dictionary<String,MemFSFile> ();
+
+
+		}
+
+		// Get name of this directory
+		public override string Name { get; }
+
+
+		// Get list of directories in this directory
+		public override IList<Dir422> GetDirs()
+		{
+			throw new NotImplementedException ();
+		}
+
+		// Get list of files in this directory
+		public override IList<File422> GetFiles()
+		{
+			throw new NotImplementedException ();
+		}
+
+		//HOW DO I CHECK FOR ROOT!!!!
+		public override Dir422 Parent 
+		{
+			get;		 
+		}
+
+		// Check if specified file is within this directory.
+		// Allows recursive checks.
+		public override bool ContainsFile(string fileName, bool recursive)
+		{
+			throw new NotImplementedException ();
+		}
+
+		// Check if specified directory is a sub-directory of this directory.
+		// Allows recursive checks.
+		public override bool ContainsDir(string dirName, bool recursive)
+		{ 
+			throw new NotImplementedException ();
+		}
+
+		// Get specified directory in this directory.
+		public override Dir422 GetDir(string dirName)
+		{
+			throw new NotImplementedException ();
+		}
+
+		// Get specified file in this directory.
+		public override File422 GetFile(string fileName)
+		{
+			throw new NotImplementedException ();
+		}
+
+		// Create new file in this directory.
+		public override File422 CreateFile(string fileName)
+		{
+			MemFSFile file;
+
+			if (this.files.ContainsKey (fileName))
+				this.files.TryGetValue (fileName, out file);
+			else
+				file = new MemFSFile(fileName,this);
+
+			this.files.Add (file.Name, this);
+
+			return file;
+		}
+
+		// Create new directory in this directory
+		public override Dir422 CreateDir(string dirName)
+		{
+			MemFSDir dir;
+
+			if (this.directories.ContainsKey (dirName))
+				this.directories.TryGetValue (dirName, out dir);
+			else
+				dir = new MemFSDir(dirName,this);
+
+			this.directories.Add (dir.Name, dir);
+
+			return dir;
+		}
+	}
+
+	//Implementation of MemFSFile
+	public class MemFSFile: File422
+	{
+
+		//StdFSFile ctor
+		public MemFSFile(string name)
+		{
+			
+		}
+
+
+		public override string Name { get; }
+
+		public override Dir422 Parent 
+		{
+			get;
+		}
+			
+		public override Stream OpenReadOnly()
+		{
+			throw new NotImplementedException ();
+		}
+			
+		public override Stream OpenReadWrite()
+		{
+			throw new NotImplementedException ();
+		}
+	}
+
+	//Implementation of MemoryFileSystem
+	public class MemoryFileSystem : FileSys422
+	{
+		private readonly Dir422 m_root;
+
+		//MemoryFileSystem ctor
+		public MemoryFileSystem()
+		{ 
+			m_root = new MemFSDir ();
+		}
+
+
+		public override Dir422 GetRoot()
+		{
+			return m_root;
 		}
 	}
 }

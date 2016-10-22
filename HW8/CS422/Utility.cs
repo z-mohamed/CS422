@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace CS422
 {
@@ -29,6 +30,24 @@ namespace CS422
 			}
 			return false;
 		}
+
+		public static MemFSDir MemDirFileExists(string path, MemoryFileSystem root)
+		{
+			MemFSDir cwd = (MemFSDir)root.GetRoot ();
+
+			string[] path_pieces = path.Split('/');
+
+			for (int i = 1; i < path_pieces.Count() - 1; i++) 
+			{
+				if (cwd.directories.ContainsKey (path_pieces [i]))
+					cwd.directories.TryGetValue (path_pieces [i], out cwd);
+				else
+					return null;
+			}
+
+			return cwd;
+		}
+			
 	}
 }
 
