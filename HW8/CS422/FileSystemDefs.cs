@@ -10,6 +10,14 @@ namespace CS422
 	// Directory abstraction.
 	public abstract class Dir422
 	{
+		public static void Main (string[] args)
+		{
+			// This is here
+			// Just so it compiles
+			// It has no other use
+		}
+
+
 		public abstract string Name { get; }
 
 		public abstract IList<Dir422> GetDirs();
@@ -114,6 +122,7 @@ namespace CS422
 	public class StdFSDir : Dir422
 	{
 		private string m_path;
+		string parent_path;
 
 		//StdFSDir ctor
 		public StdFSDir(string path)
@@ -122,11 +131,27 @@ namespace CS422
 			{
 				throw new ArgumentException();
 			}
-				
+
 			m_path = path;
 
 			Name = Utility.NameFromPath (path);
+
+			DirectoryInfo parent_info = Directory.GetParent (m_path);
+
+			parent_path = parent_info.FullName;
 		}
+
+		// rootDir ctor
+		public StdFSDir (string path, bool root)
+		{
+			m_path = path;
+
+			Name = Utility.NameFromPath (path);
+
+			parent_path = "root";
+
+		}
+
 
 		// Get name of this directory
 		public override string Name { get; }
@@ -158,18 +183,14 @@ namespace CS422
 			return files;
 		}
 			
-		//HOW DO I CHECK FOR ROOT!!!!
 		public override Dir422 Parent 
 		{
 			get 
 			{
-				DirectoryInfo parent_info = Directory.GetParent (m_path);
+				if (parent_path == "root")
+					return null;
 
-				string parent_path = parent_info.FullName;
-
-				StdFSDir parent = new StdFSDir (parent_path);
-
-				return parent;
+				return new StdFSDir (parent_path);
 			}		 
 		}
 			
@@ -265,15 +286,14 @@ namespace CS422
 				return new StdFSDir (path);
 			}
 		}
-
-		// Not Tested
+			
 		public override Stream OpenReadOnly()
 		{
 			
 			return new FileStream(m_path, FileMode.Open, FileAccess.Read);
 		}
 
-		// Not Tested
+
 		public override Stream OpenReadWrite()
 		{
 			return new FileStream (m_path, FileMode.Open, FileAccess.ReadWrite); 
@@ -288,13 +308,11 @@ namespace CS422
 		private readonly Dir422 m_root;
 
 		//StandardFileSystem ctor
-		private StandardFileSystem(string path)
+		public StandardFileSystem(string path)
 		{
-			// No! Root will be given Parent! 
-			m_root = new StdFSDir (path);
+			m_root = new StdFSDir (path, true);
 		}
-
-
+			
 		public override Dir422 GetRoot()
 		{
 			return m_root;
@@ -509,4 +527,7 @@ namespace CS422
 			return m_root;
 		}
 	}
+
+
 }
+
