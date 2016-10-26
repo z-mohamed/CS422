@@ -8,26 +8,25 @@ namespace UnitTests
 	[TestFixture ()]
 	public class Test
 	{
-		// S denotes Success 
-		// F denotes Failure 
+		// S denotes Success
+		// F denotes Failure
 		// These are used at the end of test names
 		// e.g., StdCreateS || StdCreateF
-
 		//               //
-		string good_path = 
+		string good_path =
 			"/home/zak/Repos/CS422/HW8/CS422/rootDir";
 
-		string bad_path = 
+		string bad_path =
 			"/home/zak/Repos/CS422/HW8/CS422/rootDir1";
 
 		[Test ()]
-		// 
+		//
 		public void StdFSCreateS()
 		{
 			StandardFileSystem obj = StandardFileSystem.Create(good_path);
 
 			Assert.NotNull (obj);
-			
+
 		}
 
 		[Test ()]
@@ -48,14 +47,14 @@ namespace UnitTests
 		}
 
 
-		[Test ()] 
+		[Test ()]
 		public void PathCharPresentS()
 		{
 			string back_slash_test = "some\\place";
 
-			bool fs_present = Utility.PathCharPresent (good_path); 	
+			bool fs_present = Utility.PathCharPresent (good_path);
 			bool bs_present = Utility.PathCharPresent (back_slash_test);
-		
+
 			Assert.IsTrue (fs_present);
 			Assert.IsTrue (bs_present);
 		}
@@ -65,7 +64,7 @@ namespace UnitTests
 		{
 			string name = "something";
 
-			bool no_path_char_present = Utility.PathCharPresent (name); 	
+			bool no_path_char_present = Utility.PathCharPresent (name);
 
 			Assert.IsFalse (no_path_char_present);
 		}
@@ -81,7 +80,7 @@ namespace UnitTests
 
 		}
 
-	
+
 		[Test ()]
 		public void GetDirectorieS()
 		{
@@ -102,6 +101,22 @@ namespace UnitTests
 
 			Assert.AreEqual (4, files.Count);
 
+		}
+
+		[Test ()]
+		public void RootDaddyNull ()
+		{
+			StandardFileSystem root = StandardFileSystem.Create (good_path);
+
+			Assert.IsNull (root.GetRoot().Parent);
+		}
+
+		[Test ()]
+		public void StdDirDaddyNotNull ()
+		{
+			Dir422 dir = new StdFSDir (good_path);
+			int x = 0;
+			Assert.AreEqual("CS422",dir.Parent.Name);
 		}
 
 
@@ -195,14 +210,40 @@ namespace UnitTests
 
 			Assert.AreEqual ("d6", gotten_file.Name);
 		}
+
+		[Test ()]
+		public void CreateFileSystemS()
+		{
+			MemoryFileSystem system = new MemoryFileSystem ();
+
+			MemFSDir root = (MemFSDir)system.GetRoot ();
+
+			Assert.AreEqual ("rootDir", root.Name);
+		}
+
+		[Test ()]
+		public void CreateMemDirS()
+		{
+			MemoryFileSystem system = new MemoryFileSystem ();
+
+			MemFSDir root = (MemFSDir)system.GetRoot ();
+
+			root.CreateDir ("d1");
+
+			Dir422 gotten_file = root.GetDir ("d1");
+
+			Assert.AreEqual ("d1", gotten_file.Name);
+
+		}
+
 		/*
 		[Test ()]
 		public void TestName()
 		{
 
-		}*/
+		}
+		*/
 
 
 	}
 }
-
