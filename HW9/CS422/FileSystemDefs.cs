@@ -70,11 +70,11 @@ namespace CS422
 	//Implementation of StdFSDir
 	public class StdFSDir : Dir422
 	{
+		private Dir422 m_Parent;
 		private string m_path;
-		string parent_path;
 
 		//StdFSDir ctor
-		public StdFSDir(string path)
+		public StdFSDir(string path, bool root)
 		{
 			if (!Directory.Exists(path))
 			{
@@ -85,19 +85,19 @@ namespace CS422
 
 			Name = Utility.NameFromPath (path);
 
-			DirectoryInfo parent_info = Directory.GetParent (m_path);
+			if(root || Name == "files")
+			{
+				m_Parent = null;
+			}
+			else
+			{
+				DirectoryInfo parentInfo = Directory.GetParent (m_path);
 
-			parent_path = parent_info.FullName;
-		}
+				string parentPath = parentInfo.FullName;
 
-		// rootDir ctor
-		public StdFSDir (string path, bool root)
-		{
-			m_path = path;
+				m_Parent = new StdFSDir (parentPath, false);
+			}
 
-			Name = Utility.NameFromPath (path);
-
-			parent_path = "root";
 
 		}
 
@@ -112,7 +112,7 @@ namespace CS422
 
 			foreach ( var directory in Directory.GetDirectories ( m_path ) )
 			{
-				directories.Add ( new StdFSDir ( directory ) );
+				directories.Add ( new StdFSDir ( directory,false ) );
 			}
 
 			return directories;
@@ -136,10 +136,7 @@ namespace CS422
 		{
 			get 
 			{
-				if (parent_path == "root")
-					return null;
-				
-				return new StdFSDir (parent_path);
+				return m_Parent;
 			}		 
 		}
 
@@ -204,7 +201,7 @@ namespace CS422
 			for(int i = 0; i < directories.Count(); i++)
 			{
 				if( dirName == Utility.NameFromPath(directories[i]))
-					return new StdFSDir(directories[i]);
+					return new StdFSDir(directories[i],false);
 			}
 
 			return null;
@@ -250,7 +247,7 @@ namespace CS422
 
 			Directory.CreateDirectory (path);
 
-			return new StdFSDir (path);
+			return new StdFSDir (path,false);
 		}
 	}
 
@@ -282,7 +279,7 @@ namespace CS422
 			{
 				string path = m_path.Substring (0, m_path.Count() - Name.Count ()-1);
 
-				return new StdFSDir (path);
+				return new StdFSDir (path,false);
 			}
 		}
 

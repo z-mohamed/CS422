@@ -83,8 +83,6 @@ namespace CS422
 			//double break before writing the HTML string to the network stream.
 
 			writeResponseStream.Dispose ();
-
-
 		}
 
 
