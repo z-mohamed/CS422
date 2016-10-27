@@ -16,7 +16,8 @@ namespace CS422
 		{
 			Dir422 Root = m_FS.GetRoot ();
 
-			//1. Percent-decode URI.
+			//1. Percent-decode URI. 
+			// THIS NOT GOOD ENOUGH!!!
 			Req.URI = Req.URI.Replace ("%20", " ");;
 
 			//Remove Last / here!!!!
@@ -35,22 +36,16 @@ namespace CS422
 			//	 Or is the shared directory
 			else if (Root.ContainsDir (uriName, true) || Req.URI == ServiceURI || uriName == "") 
 			{
-				// send an HTML listing for the folder.
 				if(Req.URI == ServiceURI || uriName == "")
 				{
-					//List Root
 					string dirHTMLListing = BuildDirHTML(Root);
 					Req.WriteHTMLResponse (dirHTMLListing);
 				}
-
 				else
 				{
 					Dir422 Dir = Utility.TraverseToDir (Root, Req.URI);
-
 					string dirHTMLListing = BuildDirHTML(Dir);
-
 					Req.WriteHTMLResponse (dirHTMLListing);
-
 				}
 			}
 
@@ -60,35 +55,20 @@ namespace CS422
 				Req.WriteNotFoundResponse("File or directory not found");
 			}
 		}
-			
-		private void RespondWithList(Dir422 Dir, WebRequest Req)
+
+		public override string ServiceURI 
 		{
-			/*var html = new System.Text.StringBuilder("<html>")
-				foreach(FSFile file in dir.GetFiles())
-				{
-					//PRECENT ENCODING!!!!!!!!!!!!!
-					html.AppendFormat(
-						"<a href=\ "{0}\">{1}</a>"),
-					);
-
-					//GET HREF for File$22 object
-					// Last part File422Obj.name
-					//Recurse through parent directories until hitting root
-					//For each one, append directory name to front of the string
-
-				}
-
-					html.AppendLine("</html>");
-				req.WriteHTMLResponse(html.ToString());
-				*/
+			get { return "/files";}
 		}
+
 
 		private string BuildDirHTML (Dir422 Directory)
 		{
 			var html = new System.Text.StringBuilder("<html>");
-
 			html.Append ("<h1>Folders</h1>");
 
+			// PERCENT ENCODE HERE 
+			//get rid of ( # reserved html key)!!!!!!
 			foreach(Dir422 Dir in Directory.GetDirs())
 			{
 				html.AppendFormat(
@@ -106,14 +86,13 @@ namespace CS422
 			}
 
 			html.Append ("<html>");
-
 			return html.ToString();
 		}
+
+
+
+
 			
-		public override string ServiceURI 
-		{
-			get { return "/files";}
-		}
 	}
 }
 

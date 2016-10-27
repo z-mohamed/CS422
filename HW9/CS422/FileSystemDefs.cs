@@ -97,8 +97,6 @@ namespace CS422
 
 				m_Parent = new StdFSDir (parentPath, false);
 			}
-
-
 		}
 
 		// Get name of this directory

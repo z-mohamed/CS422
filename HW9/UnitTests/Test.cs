@@ -42,7 +42,6 @@ namespace UnitTests
 		public void NameFromPathS()
 		{
 			string name = Utility.NameFromPath (good_path);
-
 			Assert.AreEqual (name, "files");
 		}
 
@@ -63,7 +62,6 @@ namespace UnitTests
 		public void PathCharPresentF()
 		{
 			string name = "something";
-
 			bool no_path_char_present = Utility.PathCharPresent (name); 	
 
 			Assert.IsFalse (no_path_char_present);
@@ -73,9 +71,7 @@ namespace UnitTests
 		public void GetParentS()
 		{
 			FileSys422 fileSystem = StandardFileSystem.Create (good_path);
-
 			Dir422 root = fileSystem.GetRoot ();
-
 			Dir422 dir = root.GetDir ("d6");
 
 			Assert.AreEqual ("files", dir.Parent.Name);
@@ -87,7 +83,6 @@ namespace UnitTests
 		public void GetDirectorieS()
 		{
 			StdFSDir dir = new StdFSDir (good_path,false);
-
 			IList<Dir422> directories = dir.GetDirs ();
 
 			Assert.AreEqual (6, directories.Count);
@@ -98,7 +93,6 @@ namespace UnitTests
 		public void GetFilesS()
 		{
 			StdFSDir dir = new StdFSDir (good_path, false);
-
 			IList<File422> files = dir.GetFiles ();
 
 			Assert.AreEqual (4, files.Count);
