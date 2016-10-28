@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Text;
 
 namespace CS422
 {
@@ -27,9 +29,42 @@ namespace CS422
 
 			//2. If it refers to file somewhere in the shared folder.
 			if (Root.ContainsFile (uriName, true)) 
-			{
-				// Send file response.
-				Console.WriteLine ("We in here baby");
+			{	
+				string path = Req.URI.Substring (0, Req.URI.LastIndexOf ("/"));
+
+				Dir422 Dir = Utility.TraverseToDir (Root, path);
+				StdFSFile File = (StdFSFile)Dir.GetFile (uriName);
+				FileStream MyFileStream = (FileStream)File.OpenReadOnly ();
+
+				if (Req.headers.ContainsKey ("Range")) 
+				{
+					// process partial response here
+					Console.WriteLine("Process Partial Request");
+					int x = 0;
+				}
+				else
+				{
+					string contentType = Utility.ContentType (uriName);
+					string response = Utility.BuildFileResponseString (
+						MyFileStream.Length.ToString(), contentType );
+
+					if (contentType != "video/mp4") 
+					{
+						byte[] sendResponseString = Encoding.ASCII.GetBytes (response);
+						Req.bodyRequest.Write (sendResponseString, 0, sendResponseString.Length);
+					}
+
+				//byte[] sendResponseString = Encoding.ASCII.GetBytes(response);
+
+					int read = 0;
+					byte[] send = new byte[7500];
+
+					while (read < MyFileStream.Length) 
+					{
+						read = read + MyFileStream.Read (send, 0, send.Length);
+						Req.bodyRequest.Write (send, 0, send.Length);
+					}
+				}   
 			}
 
 			//3. Else if it refers to a folder somewhere in the shared folder.
@@ -81,7 +116,7 @@ namespace CS422
 			foreach(File422 file in Directory.GetFiles())
 			{
 				html.AppendFormat(
-					"<a href=\"{0}\">{1}</a><br>", Utility.AbsolutePath(file.Parent), file.Name
+					"<a href=\"{0}\">{1}</a><br>", Utility.AbsolutePath(file.Parent) + "/" + file.Name, file.Name
 				);
 			}
 
