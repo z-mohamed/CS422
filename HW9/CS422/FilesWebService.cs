@@ -18,11 +18,17 @@ namespace CS422
 		{
 			Dir422 Root = m_FS.GetRoot ();
 
+			//Remove Last / here!!!!
+			if (Req.URI.LastIndexOf ('/') == Req.URI.Length - 1)
+				Req.URI = Req.URI.Substring (0, Req.URI.Length - 1);
+				//int x = 0;
+
+
 			//1. Percent-decode URI. 
 			// THIS NOT GOOD ENOUGH!!!
-			Req.URI = Req.URI.Replace ("%20", " ");;
 
-			//Remove Last / here!!!!
+			Req.URI = Utility.PercentDecode (Req.URI);
+			//string test = Req.URI.Replace ("%20", " ");;	
 
 			// Set name of requested file||dir.
 			string uriName = Utility.NameFromPath (Req.URI);
@@ -48,11 +54,11 @@ namespace CS422
 					string response = Utility.BuildFileResponseString (
 						MyFileStream.Length.ToString(), contentType );
 
-					if (contentType != "video/mp4") 
-					{
+					//if (contentType != "video/mp4") 
+					//{
 						byte[] sendResponseString = Encoding.ASCII.GetBytes (response);
 						Req.bodyRequest.Write (sendResponseString, 0, sendResponseString.Length);
-					}
+					//}
 
 				//byte[] sendResponseString = Encoding.ASCII.GetBytes(response);
 
@@ -74,13 +80,21 @@ namespace CS422
 				if(Req.URI == ServiceURI || uriName == "")
 				{
 					string dirHTMLListing = BuildDirHTML(Root);
-					Req.WriteHTMLResponse (dirHTMLListing);
+
+					byte[] sendResponseString = Encoding.ASCII.GetBytes (dirHTMLListing);
+					Req.bodyRequest.Write (sendResponseString, 0, sendResponseString.Length);
+
+					//Req.WriteHTMLResponse (dirHTMLListing);
 				}
 				else
 				{
 					Dir422 Dir = Utility.TraverseToDir (Root, Req.URI);
 					string dirHTMLListing = BuildDirHTML(Dir);
-					Req.WriteHTMLResponse (dirHTMLListing);
+
+					byte[] sendResponseString = Encoding.ASCII.GetBytes (dirHTMLListing);
+					Req.bodyRequest.Write (sendResponseString, 0, sendResponseString.Length);
+
+					//Req.WriteHTMLResponse (dirHTMLListing);
 				}
 			}
 

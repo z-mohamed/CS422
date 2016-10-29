@@ -27,7 +27,33 @@ namespace CS422
 
 		public static string PercentDecode(string uri)
 		{
-			string decodedURI = uri.Replace ("%20", " ");
+			string decodedURI = uri;
+			int position = 0;
+			int length = uri.Length;	
+
+			while( position < length) 
+			{
+				if (decodedURI [position] == '%') 
+				{
+					int hexASCII = 0;
+
+					if (Int32.TryParse(decodedURI.Substring(position+1,2), out hexASCII))
+					{
+						int unicode = hexASCII + 12;
+						char character = (char) unicode;
+						string text = character.ToString();
+
+						decodedURI = decodedURI.Insert (position, text);
+						decodedURI = decodedURI.Remove (position+1, 3);
+
+						length = length - 2;
+						position = position + 2;
+					}
+				}
+
+				position++;
+			}
+
 			return decodedURI;
 		}
 

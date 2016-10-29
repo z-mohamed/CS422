@@ -82,7 +82,7 @@ namespace CS422
 			//create and write the response line, response headers, and 
 			//double break before writing the HTML string to the network stream.
 
-			writeResponseStream.Dispose ();
+			//writeResponseStream.Dispose ();
 		}
 
 
