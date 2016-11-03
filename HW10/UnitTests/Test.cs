@@ -97,28 +97,44 @@ namespace UnitTests
 			Assert.AreEqual (".4", num4);
 		}
 
-
+		[Test ()]
 		public void ComplexCtor ()
 		{
-			BigNum myBigNum = new BigNum (10, false);
+			BigNum myBigNum = new BigNum (18.9, false);
 			Assert.False (myBigNum.isUndefined);
 		}
 
 
 		[Test ()]
-		public void SummationsSon ()
+		public void SummationSon ()
 		{
 			BigNum myBigNum1 = new BigNum ("1831.5671");
 			BigNum myBigNum2 = new BigNum ("432.1");
 
-			BigNum bigSum = myBigNum1 + myBigNum2;
+			BigNum bigSum = myBigNum2 + myBigNum1;
 
 			// 1831.5671 + 432.1 = 2263.6671
 
 			Assert.AreEqual ("1831.5671", myBigNum1.ToString());
 			Assert.AreEqual ("432.1", myBigNum2.ToString());
+			Assert.AreEqual ("2263.6671", bigSum.ToString());
 		}
 
+
+		[Test ()]
+		public void SubtractSon ()
+		{
+			BigNum myBigNum1 = new BigNum ("1831.5671");
+			BigNum myBigNum2 = new BigNum ("432.1");
+
+			BigNum bigSum = myBigNum2 - myBigNum1;
+
+			// 1831.5671 + 432.1 = 2263.6671
+
+			Assert.AreEqual ("1831.5671", myBigNum1.ToString());
+			Assert.AreEqual ("432.1", myBigNum2.ToString());
+			Assert.AreEqual ("1399.4671", bigSum.ToString());
+		}
 		/*
 		[Test ()]
 		public void  ()

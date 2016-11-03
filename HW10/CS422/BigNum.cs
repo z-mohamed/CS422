@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Collections;
 using System.Runtime.InteropServices;
 
 namespace CS422
@@ -12,7 +13,7 @@ namespace CS422
 		private BigNum( BigInteger num, int power)
 		{
 			m_Num = num;
-			m_Power = m_Power;
+			m_Power = power;
 			isUndefined = false;
 		}
 
@@ -91,44 +92,21 @@ namespace CS422
 			else
 			{
 				//Parse through the bits in value
+				var byteArray = BitConverter.GetBytes(value);
+				BitArray bits = new BitArray (byteArray);
 
-				var union = new DoubleLongUnion();
-				union.Double = value;
-
-
-				var longBytes = union.Long;
-
-				ulong sign =(longBytes>>63);
-
-				ulong exp =(longBytes<<1)>>53;
-
-				ulong fraction = (longBytes << 12);
+				//Exponent
+				BigInteger exp = ExponenetFromBitmap(bits);
+				string expS = exp.ToString ();
 
 
-				unsafe 
-				{
+				// Mantissa
+				BigInteger mantissa = MantissaFromBitmap(bits);
+				string manS = mantissa.ToString ();
 
-					var bit = ((ulong*)&longBytes)[0];
-					int x = 0;
-
-				}
-
-				
-
-
-
+				int x = 0;
 
 			}
-		}
-
-		[StructLayout(LayoutKind.Explicit)]
-		struct DoubleLongUnion
-		{
-			[FieldOffset(0)] 
-			public ulong Long;
-
-			[FieldOffset(0)] 
-			public double Double;
 		}
 			
 
@@ -155,54 +133,98 @@ namespace CS422
 
 		public static BigNum operator+(BigNum lhs, BigNum rhs)
 		{
-			
-			BigInteger lhsActual = BigInteger.Parse (lhs.m_Num.ToString ());
-			lhsActual = lhsActual * (10 ^ (-lhs.m_Power));
+			// (A * 10^D) + (B * 10^C)
+			// 10^C (A * 10^D-C) + 10^C (B)
+			// 10^C (A*10^D-C + B)
 
-			BigInteger thing2 = rhs.m_Num;
-			thing2 = thing2 * 10 ^ (-rhs.m_Power);
 
-			BigInteger sumthing = lhsActual + thing2;
-
-			string finalthing = sumthing.ToString ();
-
-			BigNum summation = new BigNum (finalthing);
-
-			/*
-			if(lhs.m_Power == rhs.m_Power)
+			//Special Case
+			if (lhs.m_Power == rhs.m_Power) 
 			{
-				BigInteger sum = lhs.m_Num + rhs.m_Num;
-				summation = new BigNum (sum, lhs.m_Power);
+				BigInteger bigSpecialSum = lhs.m_Num + rhs.m_Num;
+				return new BigNum (bigSpecialSum, lhs.m_Power);
 			}
 
-			BigNum LargerExp;
-			BigNum SmallerExp;
+			// Standard Case
+			BigInteger A = lhs.m_Num;
+			BigInteger B = rhs.m_Num;
 
-			if(lhs.m_Power > rhs.m_Power)
-			{
-				LargerExp = lhs;
-				SmallerExp = rhs;
+			int biggerExp;
+			int smallerExp;
+
+			if(-lhs.m_Power > -rhs.m_Power)
+			{		
+				A = lhs.m_Num;
+				B = rhs.m_Num;
+				biggerExp = -lhs.m_Power;
+				smallerExp = -rhs.m_Power;
 			}
 			else
 			{
-				LargerExp = rhs;
-				SmallerExp = lhs;
+				A = rhs.m_Num;
+				B = lhs.m_Num;
+				biggerExp = -rhs.m_Power;
+				smallerExp = -lhs.m_Power;
 			}
 
+			int newExp = biggerExp - smallerExp;
 
-			// Increase rhs.m_Power by
-			// lhs.m_Power - rhs.m_Power
-			//Change 
-			//else( rhs.m_Power < rhs
+			BigInteger base10 = new BigInteger (10);
+			BigInteger exp = BigInteger.Pow (base10, newExp);
+			BigInteger sum = A * (exp) + B;
 
+			BigNum summation = new BigNum (sum, -smallerExp);
 
-			*/
 			return summation;
 		}
 
 		public static BigNum operator-(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			// (A * 10^D) - (B * 10^C)
+			// 10^C (A * 10^D-C) - 10^C (B)
+			// 10^C (A*10^D-C - B)
+
+
+			//Special Case
+			if (lhs.m_Power == rhs.m_Power) 
+			{
+				BigInteger bigSpecialDiff = lhs.m_Num - rhs.m_Num;
+				
+				return new BigNum (bigSpecialDiff, lhs.m_Power);
+			}
+
+			// Standard Case
+			BigInteger A = lhs.m_Num;
+			BigInteger B = rhs.m_Num;
+
+			int biggerExp;
+			int smallerExp;
+
+			if(-lhs.m_Power > -rhs.m_Power)
+			{		
+				A = lhs.m_Num;
+				B = rhs.m_Num;
+				biggerExp = -lhs.m_Power;
+				smallerExp = -rhs.m_Power;
+			}
+			else
+			{
+				A = rhs.m_Num;
+				B = lhs.m_Num;
+				biggerExp = -rhs.m_Power;
+				smallerExp = -lhs.m_Power;
+			}
+
+			int newExp = biggerExp - smallerExp;
+
+			BigInteger base10 = new BigInteger (10);
+			BigInteger exp = BigInteger.Pow (base10, newExp);
+			BigInteger sum = A * (exp) - B;
+
+			BigNum summation = new BigNum (sum, -smallerExp);
+
+			return summation;
+			
 		}
 
 		public static BigNum operator*(BigNum lhs, BigNum rhs)
@@ -322,6 +344,58 @@ namespace CS422
 				leanNum = "0";
 			
 			return leanNum;
+		}
+
+
+		public static BigInteger ExponenetFromBitmap(BitArray bits)
+		{
+			BigInteger base2 = new BigInteger (2);
+			BigInteger exp = new BigInteger(0);
+
+			for(int i = 62; i > 51; i--)
+			{
+				if (bits [i])
+					exp = exp + BigInteger.Pow (base2,i - 52);
+			}
+
+			exp = exp - 1023;
+
+			return exp;
+		}
+
+		public static BigInteger MantissaFromBitmap(BitArray bits)
+		{
+			BigInteger one = new BigInteger (1);
+			BigInteger base2 = new BigInteger (2);
+			BigInteger mantissa = new BigInteger(0);
+
+			for (int i = 51; i >= 0; i--) 
+			{
+				if(bits[i])
+					mantissa = mantissa +  BigInteger.Divide( one , BigInteger.Pow(base2,-(i-52)));
+			}
+
+			return mantissa;
+		}
+
+
+
+
+		public static BigNum Pow2(int pow)
+		{
+			BigNum one = new BigNum ("1");
+
+			if (pow < 0) 
+			{
+				return one / Pow2 (pow);
+			}
+
+			else
+			{
+				//Multiple 2 pow times
+			}
+
+			return null;
 		}
 
 	}
