@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace CS422
 {
@@ -8,13 +9,20 @@ namespace CS422
 		readonly BigInteger m_Num;
 		readonly int m_Power;
 
+		private BigNum( BigInteger num, int power)
+		{
+			m_Num = num;
+			m_Power = m_Power;
+			isUndefined = false;
+		}
+
+
 		public BigNum (string number)
 		{
 			// If string does not represent a valid
 			// number throw an exception
 			if (!IsStringValidNum (number))
 				throw new ArgumentException ();
-
 
 			// Remove all insignificant zeros
 			// that are left of decimal point
@@ -26,7 +34,6 @@ namespace CS422
 				// Remove all insignificant zeros
 				// that are right of decimal point
 				number = PruneTrailingZeros (number);
-
 
 				int decimalIndex = number.IndexOf ('.');
 
@@ -84,9 +91,48 @@ namespace CS422
 			else
 			{
 				//Parse through the bits in value
+
+				var union = new DoubleLongUnion();
+				union.Double = value;
+
+
+				var longBytes = union.Long;
+
+				ulong sign =(longBytes>>63);
+
+				ulong exp =(longBytes<<1)>>53;
+
+				ulong fraction = (longBytes << 12);
+
+
+				unsafe 
+				{
+
+					var bit = ((ulong*)&longBytes)[0];
+					int x = 0;
+
+				}
+
+				
+
+
+
+
 			}
 		}
+
+		[StructLayout(LayoutKind.Explicit)]
+		struct DoubleLongUnion
+		{
+			[FieldOffset(0)] 
+			public ulong Long;
+
+			[FieldOffset(0)] 
+			public double Double;
+		}
 			
+
+
 		public override string ToString ()
 		{
 			if (this.isUndefined) 
@@ -109,7 +155,49 @@ namespace CS422
 
 		public static BigNum operator+(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			
+			BigInteger lhsActual = BigInteger.Parse (lhs.m_Num.ToString ());
+			lhsActual = lhsActual * (10 ^ (-lhs.m_Power));
+
+			BigInteger thing2 = rhs.m_Num;
+			thing2 = thing2 * 10 ^ (-rhs.m_Power);
+
+			BigInteger sumthing = lhsActual + thing2;
+
+			string finalthing = sumthing.ToString ();
+
+			BigNum summation = new BigNum (finalthing);
+
+			/*
+			if(lhs.m_Power == rhs.m_Power)
+			{
+				BigInteger sum = lhs.m_Num + rhs.m_Num;
+				summation = new BigNum (sum, lhs.m_Power);
+			}
+
+			BigNum LargerExp;
+			BigNum SmallerExp;
+
+			if(lhs.m_Power > rhs.m_Power)
+			{
+				LargerExp = lhs;
+				SmallerExp = rhs;
+			}
+			else
+			{
+				LargerExp = rhs;
+				SmallerExp = lhs;
+			}
+
+
+			// Increase rhs.m_Power by
+			// lhs.m_Power - rhs.m_Power
+			//Change 
+			//else( rhs.m_Power < rhs
+
+
+			*/
+			return summation;
 		}
 
 		public static BigNum operator-(BigNum lhs, BigNum rhs)
