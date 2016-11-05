@@ -95,21 +95,29 @@ namespace CS422
 				var byteArray = BitConverter.GetBytes(value);
 				BitArray bits = new BitArray (byteArray);
 
+				bool negative = false;
+
+				if (bits [63])
+					negative = true;
+
 				//Exponent
 				BigInteger exp = ExponenetFromBitmap(bits);
 				string expS = exp.ToString ();
 
-
 				// Mantissa
-				BigInteger mantissa = MantissaFromBitmap(bits);
+				BigNum mantissa = MantissaFromBitmap(bits);
 				string manS = mantissa.ToString ();
 
-				int x = 0;
+				BigNum one = new BigNum ("1");
+				BigNum test =  one + mantissa;
+				test = test * Pow2 ((int)exp);
 
+				BigNum resultant = new BigNum (test.ToString ());
+
+				m_Num = resultant.m_Num;
+				m_Power = resultant.m_Power;
 			}
 		}
-			
-
 
 		public override string ToString ()
 		{
@@ -133,11 +141,6 @@ namespace CS422
 
 		public static BigNum operator+(BigNum lhs, BigNum rhs)
 		{
-			// (A * 10^D) + (B * 10^C)
-			// 10^C (A * 10^D-C) + 10^C (B)
-			// 10^C (A*10^D-C + B)
-
-
 			//Special Case
 			if (lhs.m_Power == rhs.m_Power) 
 			{
@@ -180,86 +183,129 @@ namespace CS422
 
 		public static BigNum operator-(BigNum lhs, BigNum rhs)
 		{
-			// (A * 10^D) - (B * 10^C)
-			// 10^C (A * 10^D-C) - 10^C (B)
-			// 10^C (A*10^D-C - B)
-
-
 			//Special Case
 			if (lhs.m_Power == rhs.m_Power) 
 			{
 				BigInteger bigSpecialDiff = lhs.m_Num - rhs.m_Num;
-				
 				return new BigNum (bigSpecialDiff, lhs.m_Power);
 			}
 
-			// Standard Case
-			BigInteger A = lhs.m_Num;
-			BigInteger B = rhs.m_Num;
-
 			int biggerExp;
 			int smallerExp;
+			int newExp;
+
+			BigInteger base10 = new BigInteger (10);
+			BigInteger exp;
+			BigInteger sum;
 
 			if(-lhs.m_Power > -rhs.m_Power)
 			{		
-				A = lhs.m_Num;
-				B = rhs.m_Num;
 				biggerExp = -lhs.m_Power;
 				smallerExp = -rhs.m_Power;
+				newExp = biggerExp - smallerExp;
+				exp = BigInteger.Pow (base10, newExp);
+
+				sum = (lhs.m_Num * (exp)) - rhs.m_Num;
 			}
 			else
 			{
-				A = rhs.m_Num;
-				B = lhs.m_Num;
 				biggerExp = -rhs.m_Power;
 				smallerExp = -lhs.m_Power;
+				newExp = biggerExp - smallerExp;
+				exp = BigInteger.Pow (base10, newExp);
+
+				sum = lhs.m_Num  - (rhs.m_Num * (exp));
 			}
 
-			int newExp = biggerExp - smallerExp;
-
-			BigInteger base10 = new BigInteger (10);
-			BigInteger exp = BigInteger.Pow (base10, newExp);
-			BigInteger sum = A * (exp) - B;
-
 			BigNum summation = new BigNum (sum, -smallerExp);
-
 			return summation;
-			
 		}
 
 		public static BigNum operator*(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			BigInteger product = BigInteger.Multiply (lhs.m_Num, rhs.m_Num);
+			int newPow = lhs.m_Power + rhs.m_Power;
+			return new BigNum (product, newPow);
 		}
 
 		public static BigNum operator/(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			if (lhs.isUndefined || rhs.isUndefined || (rhs.m_Num == 0 && rhs.m_Power == 0))
+				return new BigNum (double.NaN, false);
+			
+			BigInteger base10 = new BigInteger (10);
+			BigInteger oneThirtyZeros = BigInteger.Pow (base10, 30);
+			BigInteger Numerator = lhs.m_Num * oneThirtyZeros; 
+
+			int power = lhs.m_Power - 30;
+
+			BigInteger Denominator = rhs.m_Num;
+			BigInteger bigQuotient = BigInteger.Divide (Numerator, Denominator);
+
+			power = power - rhs.m_Power;
+
+			if (power < 0)
+				power = power * (-1);
+
+			return new BigNum (bigQuotient,power);
 		}
 
 		public static bool operator>(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			BigNum diff = lhs - rhs;
+			char sign = diff.ToString () [0];
+
+			if (sign != '-')
+				return true;
+
+			return false;
+			
 		}
 
 		public static bool operator>=(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			BigNum diff = lhs - rhs;
+			char sign = diff.ToString () [0];
+
+			if (sign != '-' || diff.m_Num == 0)
+				return true;
+
+			return false;
 		}
 
 		public static bool operator<(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			BigNum diff = lhs - rhs;
+			char sign = diff.ToString () [0];
+
+			if (sign == '-')
+				return true;
+
+			return false;
+
 		}
 
 		public static bool operator<=(BigNum lhs, BigNum rhs)
 		{
-			throw new NotImplementedException ();
+			BigNum diff = lhs - rhs;
+			char sign = diff.ToString () [0];
+
+			if (sign == '-' || diff.m_Num == 0)
+				return true;
+
+			return false;
 		}
 
 		public static bool IsToStringCorrect(double value)
 		{
-			throw new NotImplementedException ();
+			BigNum toString = new BigNum (value, true);
+
+			BigNum extractBits = new BigNum (value, false);
+
+			if (toString.ToString () == extractBits.ToString ())
+				return true;
+
+			return false;
 		}
 
 		/***************************************************/
@@ -324,7 +370,6 @@ namespace CS422
 			if (leanNum == ".")
 				leanNum = "0";
 
-
 			return leanNum;
 		}
 
@@ -359,26 +404,27 @@ namespace CS422
 			}
 
 			exp = exp - 1023;
-
 			return exp;
 		}
 
-		public static BigInteger MantissaFromBitmap(BitArray bits)
+		public static BigNum MantissaFromBitmap(BitArray bits)
 		{
-			BigInteger one = new BigInteger (1);
+			BitArray mantissa = new BitArray (52);
 			BigInteger base2 = new BigInteger (2);
-			BigInteger mantissa = new BigInteger(0);
+			BigInteger exp = new BigInteger(0);
 
+			int j = 0;
 			for (int i = 51; i >= 0; i--) 
 			{
-				if(bits[i])
-					mantissa = mantissa +  BigInteger.Divide( one , BigInteger.Pow(base2,-(i-52)));
+				if (bits [i])
+					exp = exp + BigInteger.Pow (base2, (i - 52) * (-1));
 			}
 
-			return mantissa;
+			BigNum fraction = new BigNum (exp.ToString ());
+			fraction = fraction * Pow2 (-52);
+
+			return fraction;
 		}
-
-
 
 
 		public static BigNum Pow2(int pow)
@@ -387,15 +433,16 @@ namespace CS422
 
 			if (pow < 0) 
 			{
-				return one / Pow2 (pow);
+				BigNum Deno = Pow2 (-1 * pow);
+				return one / Deno;
 			}
 
 			else
 			{
-				//Multiple 2 pow times
+				BigInteger baseTwo = new BigInteger (2);
+				BigInteger exponential = BigInteger.Pow (baseTwo, pow);
+				return new BigNum (exponential.ToString ()); 
 			}
-
-			return null;
 		}
 
 	}

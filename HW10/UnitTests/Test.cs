@@ -100,7 +100,7 @@ namespace UnitTests
 		[Test ()]
 		public void ComplexCtor ()
 		{
-			BigNum myBigNum = new BigNum (18.9, false);
+			BigNum myBigNum = new BigNum (48.9, false);
 			Assert.False (myBigNum.isUndefined);
 		}
 
@@ -127,14 +127,94 @@ namespace UnitTests
 			BigNum myBigNum1 = new BigNum ("1831.5671");
 			BigNum myBigNum2 = new BigNum ("432.1");
 
-			BigNum bigSum = myBigNum2 - myBigNum1;
+			BigNum bigDiff = myBigNum1 - myBigNum2;
 
 			// 1831.5671 + 432.1 = 2263.6671
 
 			Assert.AreEqual ("1831.5671", myBigNum1.ToString());
 			Assert.AreEqual ("432.1", myBigNum2.ToString());
-			Assert.AreEqual ("1399.4671", bigSum.ToString());
+			Assert.AreEqual ("1399.4671", bigDiff.ToString());
 		}
+
+
+		[Test ()]
+		public void SpecialCaseSubtract()
+		{
+
+			BigNum myBigNum1 = new BigNum ("1831.19");
+			BigNum myBigNum2 = new BigNum ("432.14");
+
+			BigNum specialDiff = myBigNum1 - myBigNum2;
+
+			Assert.AreEqual ("1831.19", myBigNum1.ToString ());
+			Assert.AreEqual ("432.14", myBigNum2.ToString ());
+			Assert.AreEqual ("1399.05", specialDiff.ToString ());
+
+		}
+
+		[Test ()]
+		public void MultiplySon  ()
+		{
+			BigNum myBigNum1 = new BigNum ("1831.19");
+			BigNum myBigNum2 = new BigNum ("432.14");
+
+			BigNum product = myBigNum1 * myBigNum2;
+
+			Assert.AreEqual ("1831.19", myBigNum1.ToString ());
+			Assert.AreEqual ("432.14", myBigNum2.ToString ());
+			Assert.AreEqual ("791330.4466", product.ToString ());
+		}
+
+
+		[Test ()]
+		public void DivideSon  ()
+		{
+			BigNum myBigNum1 = new BigNum ("1");
+			BigNum myBigNum2 = new BigNum ("3");
+
+			BigNum quotient = myBigNum1 / myBigNum2;
+
+			int x = 0;
+		}
+
+
+		[Test ()]
+		public void lessThanThou  ()
+		{
+			BigNum myBigNum1 = new BigNum ("1");
+			BigNum myBigNum2 = new BigNum ("3");
+
+			Assert.IsTrue (myBigNum1 < myBigNum2);
+		}
+
+		[Test ()]
+		public void lessThanThouOrEqual  ()
+		{
+			BigNum myBigNum1 = new BigNum ("3");
+			BigNum myBigNum2 = new BigNum ("3");
+
+			Assert.IsTrue (myBigNum1 <= myBigNum2);
+		}
+
+		[Test ()]
+		public void greaterThanThou  ()
+		{
+			BigNum myBigNum1 = new BigNum ("1");
+			BigNum myBigNum2 = new BigNum ("3");
+
+			Assert.IsTrue (myBigNum2 > myBigNum1);
+		}
+
+		[Test ()]
+		public void greaterThanThouOrEqual  ()
+		{
+			BigNum myBigNum1 = new BigNum ("3");
+			BigNum myBigNum2 = new BigNum ("3");
+
+			Assert.IsTrue (myBigNum2 >= myBigNum1);
+		}
+
+			
 		/*
 		[Test ()]
 		public void  ()
